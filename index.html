@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>हिंदी वर्णमाला मित्र - Hindi Letters Adventure</title>
+<style>
+/* ============================================================
+   GLOBAL STYLES
+   ============================================================ */
+:root{
+  --pink:#ff6fa5;
+  --purple:#8c5cf5;
+  --blue:#4fc3f7;
+  --yellow:#ffd93d;
+  --green:#57d38c;
+  --orange:#ff9457;
+  --red:#ff5c6c;
+  --dark:#3a2e5c;
+  --card-radius: 22px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent; user-select:none;}
+html,body{
+  margin:0; padding:0; height:100%;
+  font-family:"Segoe UI","Noto Sans Devanagari","Nirmala UI","Baloo 2",sans-serif;
+  overflow:hidden;
+  background:linear-gradient(160deg,#a3e9ff 0%, #c8b8ff 45%, #ffd6ec 100%);
+}
+#app{position:relative; width:100vw; height:100vh; overflow:hidden;}
+
+/* Floating decorative background shapes */
+.bg-decor{position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+.floaty{position:absolute; opacity:.55; animation:floatUp linear infinite;}
+@keyframes floatUp{
+  0%{transform:translateY(10vh) translateX(0) rotate(0deg);}
+  100%{transform:translateY(-120vh) translateX(30px) rotate(360deg);}
+}
+
+.screen{
+  position:absolute; inset:0; z-index:1;
+  display:none; flex-direction:column; align-items:center;
+  padding: 14px 16px 22px;
+  overflow-y:auto;
+}
+.screen.active{display:flex;}
+
+/* Top bar shown on all screens */
+.topbar{
+  width:100%; max-width:900px; display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:6px;
+}
+.topbar .stat-pill{
+  background:#fff; border-radius:30px; padding:8px 16px; font-weight:800; font-size:1.05rem;
+  color:var(--dark); box-shadow:0 4px 0 rgba(0,0,0,.08); display:flex; align-items:center; gap:6px;
+}
+.icon-btn{
+  background:#fff; border:none; border-radius:50%; width:52px; height:52px; font-size:1.5rem;
+  box-shadow:0 4px 0 rgba(0,0,0,.12); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition: transform .12s ease;
+}
+.icon-btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.12);}
+
+h1,h2,h3{margin:.3em 0; color:var(--dark);}
+.title-big{
+  font-size:2.4rem; font-weight:900; color:#fff; text-shadow: 3px 3px 0 var(--purple), 0 0 18px rgba(255,255,255,.5);
+  text-align:center; margin:6px 0 2px;
+}
+.subtitle{color:var(--dark); font-weight:700; opacity:.85; text-align:center; margin-bottom:10px;}
+
+/* Big touch-friendly buttons */
+.big-btn{
+  border:none; border-radius:24px; padding:18px 30px; font-size:1.3rem; font-weight:800;
+  color:#fff; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.18); min-width:230px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.big-btn:active{transform:translateY(5px); box-shadow:0 1px 0 rgba(0,0,0,.18);}
+.btn-pink{background:linear-gradient(180deg,#ff8fbb,var(--pink));}
+.btn-purple{background:linear-gradient(180deg,#a67bff,var(--purple));}
+.btn-blue{background:linear-gradient(180deg,#7fd7ff,var(--blue));}
+.btn-green{background:linear-gradient(180deg,#7fe8ac,var(--green));}
+.btn-orange{background:linear-gradient(180deg,#ffb37f,var(--orange));}
+.btn-yellow{background:linear-gradient(180deg,#ffe680,var(--yellow)); color:var(--dark);}
+.btn-small{padding:10px 18px; font-size:1rem; min-width:auto; border-radius:16px;}
+
+/* Mascot */
+.mascot{
+  font-size:5rem; animation:bob 2.4s ease-in-out infinite; filter:drop-shadow(0 8px 6px rgba(0,0,0,.15));
+}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-14px) rotate(3deg);}}
+.speech-bubble{
+  background:#fff; border-radius:20px; padding:10px 18px; font-weight:800; color:var(--dark);
+  position:relative; box-shadow:0 4px 0 rgba(0,0,0,.1); max-width:280px; text-align:center; margin-bottom:6px;
+}
+.speech-bubble:after{
+  content:""; position:absolute; bottom:-14px; left:50%; transform:translateX(-50%);
+  border-width:14px 10px 0; border-style:solid; border-color:#fff transparent transparent;
+}
+
+/* Mode grid */
+.mode-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; width:100%; max-width:820px; margin-top:14px;
+}
+.mode-card{
+  background:#fff; border-radius:var(--card-radius); padding:20px 14px; text-align:center; cursor:pointer;
+  box-shadow:0 6px 0 rgba(0,0,0,.12); transition: transform .12s ease;
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.mode-card:active{transform:translateY(4px);}
+.mode-card .emoji{font-size:2.8rem;}
+.mode-card h3{margin:0; font-size:1.15rem; color:var(--dark);}
+.mode-card p{margin:0; font-size:.85rem; color:#777; font-weight:600;}
+
+/* Flashcard learn screen */
+.flash-tabs{display:flex; gap:10px; margin-bottom:10px;}
+.tab-btn{
+  border:none; border-radius:20px; padding:8px 20px; font-weight:800; cursor:pointer; background:#fff;
+  color:var(--dark); box-shadow:0 3px 0 rgba(0,0,0,.1);
+}
+.tab-btn.active{background:var(--purple); color:#fff;}
+
+.flashcard{
+  background:#fff; border-radius:28px; width:min(320px,80vw); padding:26px 20px; text-align:center;
+  box-shadow:0 10px 0 rgba(0,0,0,.12); position:relative;
+}
+.flash-letter{font-size:6.5rem; font-weight:900; color:var(--purple); line-height:1; margin-bottom:4px;
+  text-shadow:2px 2px 0 rgba(140,92,245,.15);}
+.flash-translit{color:#999; font-weight:700; font-size:1rem; margin-bottom:10px;}
+.flash-word-row{display:flex; align-items:center; justify-content:center; gap:10px; margin:10px 0;}
+.flash-emoji{font-size:2.6rem;}
+.flash-word{font-size:1.6rem; font-weight:800; color:var(--dark);}
+.flash-nav{display:flex; align-items:center; gap:16px; margin-top:16px;}
+.progress-dots{display:flex; gap:4px; flex-wrap:wrap; max-width:280px; justify-content:center; margin-top:10px;}
+.dot{width:8px; height:8px; border-radius:50%; background:#ddd;}
+.dot.learned{background:var(--green);}
+.dot.current{background:var(--pink); transform:scale(1.4);}
+
+/* Quiz screen */
+.quiz-header{width:100%; max-width:640px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.quiz-question-box{
+  background:#fff; border-radius:26px; padding:24px 22px; width:min(560px,92vw); text-align:center;
+  box-shadow:0 8px 0 rgba(0,0,0,.12); margin-bottom:20px;
+}
+.quiz-prompt{font-weight:800; color:var(--dark); font-size:1.15rem; margin-bottom:10px;}
+.quiz-display-letter{font-size:5rem; font-weight:900; color:var(--purple);}
+.quiz-display-row{display:flex; align-items:center; justify-content:center; gap:14px; font-size:2rem;}
+.speak-btn{
+  border:none; background:var(--blue); color:#fff; border-radius:50%; width:60px; height:60px; font-size:1.6rem;
+  cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.15);
+}
+.options-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; width:100%; max-width:520px;}
+.opt-btn{
+  background:#fff; border:4px solid #eee; border-radius:20px; padding:16px 10px; font-size:2.2rem; font-weight:800;
+  cursor:pointer; color:var(--dark); box-shadow:0 5px 0 rgba(0,0,0,.1); transition:all .15s ease;
+}
+.opt-btn:active{transform:translateY(3px);}
+.opt-btn.correct{background:var(--green); color:#fff; border-color:var(--green);}
+.opt-btn.wrong{background:var(--red); color:#fff; border-color:var(--red);}
+.opt-btn .opt-sub{display:block; font-size:.95rem; margin-top:4px; font-weight:700;}
+
+.timer-bar-wrap{width:100%; max-width:520px; background:#fff; border-radius:20px; height:16px; margin-bottom:14px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,.1);}
+.timer-bar{height:100%; background:linear-gradient(90deg,var(--green),var(--yellow)); width:100%; transition:width .2s linear;}
+
+/* Memory game */
+.memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; width:100%; max-width:560px;}
+.mem-card{
+  aspect-ratio:1/1; border-radius:16px; cursor:pointer; position:relative; perspective:600px;
+}
+.mem-inner{width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform .5s;}
+.mem-card.flipped .mem-inner, .mem-card.matched .mem-inner{transform:rotateY(180deg);}
+.mem-face{position:absolute; inset:0; backface-visibility:hidden; border-radius:16px; display:flex; align-items:center; justify-content:center; font-weight:900;}
+.mem-back{background:linear-gradient(160deg,var(--purple),var(--pink)); font-size:1.8rem; color:#fff;}
+.mem-front{background:#fff; transform:rotateY(180deg); font-size:1.9rem; color:var(--dark); box-shadow:0 4px 0 rgba(0,0,0,.08); flex-direction:column; gap:2px;}
+.mem-card.matched .mem-front{background:#e2ffe9; color:var(--green); border:3px solid var(--green);}
+.mem-front small{font-size:.65rem; font-weight:700; color:#999;}
+
+/* Bubble pop game */
+#bubble-area{position:relative; width:100%; max-width:640px; height:56vh; background:linear-gradient(180deg,#bdeaff,#e8f8ff); border-radius:24px; overflow:hidden; box-shadow:0 6px 0 rgba(0,0,0,.1); margin-bottom:10px;}
+.bubble{
+  position:absolute; bottom:-70px; width:70px; height:70px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.7rem; color:#fff;
+  cursor:pointer; box-shadow:inset -6px -6px 12px rgba(0,0,0,.15), 0 3px 8px rgba(0,0,0,.15);
+  animation: rise linear forwards;
+}
+@keyframes rise{ to { transform:translateY(-64vh); } }
+.bubble.pop{animation:popAnim .3s forwards !important;}
+@keyframes popAnim{ to{ transform:scale(1.6); opacity:0; } }
+
+/* Progress / parent screen */
+.progress-table{width:100%; max-width:640px; background:#fff; border-radius:20px; padding:14px; box-shadow:0 6px 0 rgba(0,0,0,.1); max-height:52vh; overflow-y:auto;}
+.progress-row{display:flex; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid #f1f1f1; font-weight:700; color:var(--dark);}
+.progress-row .pl{font-size:1.5rem; width:40px; text-align:center;}
+.bar-bg{flex:1; background:#eee; border-radius:10px; height:12px; overflow:hidden;}
+.bar-fill{height:100%; border-radius:10px;}
+
+/* Feedback banner */
+#feedback-banner{
+  position:fixed; top:18%; left:50%; transform:translate(-50%,-30px); z-index:50; opacity:0; pointer-events:none;
+  font-size:2rem; font-weight:900; color:#fff; padding:16px 34px; border-radius:26px; text-shadow:1px 1px 3px rgba(0,0,0,.2);
+  transition: all .25s ease; box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
+#feedback-banner.show{opacity:1; transform:translate(-50%,0);}
+.fb-correct{background:linear-gradient(135deg,var(--green),#3fbf7a);}
+.fb-wrong{background:linear-gradient(135deg,var(--red),#e0455a);}
+
+/* confetti */
+.confetti-piece{position:fixed; top:-20px; z-index:60; border-radius:2px; pointer-events:none;}
+
+/* misc */
+.row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+.center-col{display:flex; flex-direction:column; align-items:center;}
+.footer-note{font-size:.8rem; color:#7a7a95; margin-top:8px; text-align:center; max-width:520px;}
+.hidden{display:none !important;}
+.streak-badge{background:var(--yellow); color:var(--dark); border-radius:16px; padding:4px 12px; font-weight:900; font-size:.9rem;}
+@media (max-width:480px){
+  .title-big{font-size:1.8rem;}
+  .flash-letter{font-size:5rem;}
+  .options-grid{grid-template-columns:repeat(2,1fr);}
+  .memory-grid{grid-template-columns:repeat(4,1fr); gap:6px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bg-decor" id="bg-decor"></div>
+
+  <!-- ============ HOME SCREEN ============ -->
+  <section class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="stat-pill">⭐ <span id="home-stars">0</span></div>
+      <button class="icon-btn" id="mute-btn" title="Sound on/off">🔊</button>
+    </div>
+    <div class="center-col" style="margin-top:2vh;">
+      <div class="mascot" id="mascot-home">🦉</div>
+      <div class="speech-bubble" id="mascot-msg">नमस्ते! चलो हिंदी सीखते हैं!</div>
+      <h1 class="title-big">हिंदी वर्णमाला मित्र</h1>
+      <p class="subtitle">Hindi Letters Adventure — Play, Listen &amp; Learn!</p>
+      <div class="row" style="margin-top:14px;">
+        <button class="big-btn btn-pink" id="btn-play">🎮 खेलना शुरू करें</button>
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <button class="big-btn btn-blue btn-small" id="btn-progress">📊 प्रगति देखें</button>
+        <button class="big-btn btn-orange btn-small" id="btn-reset">🔄 रीसेट</button>
+      </div>
+    </div>
+    <p class="footer-note">Tip: Turn up your device volume 🔉 to hear letter sounds and cheerful rewards!</p>
+  </section>
+
+  <!-- ============ MODE SELECT SCREEN ============ -->
+  <section class="screen" id="screen-modes">
+    <div class="topbar">
+      <button class="icon-btn" data-back="screen-home">⬅️</button>
+      <div class="stat-pill">⭐ <span id="modes-stars">0</span></div>
+      <button class="icon-btn" id="mute-btn2" title="Sound on/off">🔊</button>
+    </div>
+    <h2>कौन सा खेल खेलें?</h2>
+    <div class="mode-grid">
+      <div class="mode-card" data-mode="learn"><div class="emoji">📖</div><h3>अक्षर सीखें</h3><p>Learn Letters</p></div>
+      <div class="mode-card" data-mode="quiz"><div class="emoji">🧩</div><h3>प्रश्नोत्तरी</h3><p>Quiz Adventure</p></div>
+      <div class="mode-card" data-mode="memory"><div class="emoji">🃏</div><h3>याददाश्त खेल</h3><p>Memory Match</p></div>
+      <div class="mode-card" data-mode="bubble"><div class="emoji">🫧</div><h3>बुलबुला फोड़ो</h3><p>Bubble Pop</p></div>
+    </div>
+  </section>
+
+  <!-- ============ LEARN / FLASHCARD SCREEN ============ -->
+  <section class="screen" id="screen-learn">
+    <div class="topbar">
+      <button class="icon-btn" data-back="screen-modes">⬅️</button>
+      <div class="stat-pill">⭐ <span id="learn-stars">0</span></div>
+      <button class="icon-btn" id="mute-btn3">🔊</button>
+    </div>
+    <div class="flash-tabs">
+      <button class="tab-btn active" data-type="vowel">स्वर (Vowels)</button>
+      <button class="tab-btn" data-type="consonant">व्यंजन (Consonants)</button>
+    </div>
+    <div class="flashcard">
+      <div class="flash-letter" id="fc-letter">अ</div>
+      <div class="flash-translit" id="fc-translit">a</div>
+      <div class="flash-word-row">
+        <div class="flash-emoji" id="fc-emoji">🍎</div>
+        <div class="flash-word" id="fc-word">अनार</div>
+      </div>
+      <button class="speak-btn" id="fc-speak">🔊</button>
+    </div>
+    <div class="flash-nav">
+      <button class="icon-btn" id="fc-prev">◀️</button>
+      <button class="big-btn btn-green btn-small" id="fc-know">✅ मुझे पता है!</button>
+      <button class="icon-btn" id="fc-next">▶️</button>
+    </div>
+    <div class="progress-dots" id="fc-dots"></div>
+  </section>
+
+  <!-- ============ QUIZ SCREEN ============ -->
+  <section class="screen" id="screen-quiz">
+    <div class="quiz-header">
+      <button class="icon-btn" data-back="screen-modes">⬅️</button>
+      <div class="row">
+        <div class="stat-pill">⭐ <span id="quiz-stars">0</span></div>
+        <div class="stat-pill">🔥 <span id="quiz-streak">0</span></div>
+      </div>
+      <button class="icon-btn" id="mute-btn4">🔊</button>
+    </div>
+    <div class="timer-bar-wrap hidden" id="quiz-timer-wrap"><div class="timer-bar" id="quiz-timer-bar"></div></div>
+    <div class="quiz-question-box">
+      <div class="quiz-prompt" id="quiz-prompt">सुनो और सही अक्षर चुनो</div>
+      <div class="quiz-display-row" id="quiz-display"></div>
+    </div>
+    <div class="options-grid" id="quiz-options"></div>
+    <p class="footer-note" id="quiz-level-label">स्तर: शुरुआती</p>
+  </section>
+
+  <!-- ============ MEMORY GAME SCREEN ============ -->
+  <section class="screen" id="screen-memory">
+    <div class="topbar">
+      <button class="icon-btn" data-back="screen-modes">⬅️</button>
+      <div class="stat-pill">🃏 <span id="mem-pairs">0</span>/<span id="mem-total">6</span></div>
+      <button class="icon-btn" id="mute-btn5">🔊</button>
+    </div>
+    <h2>जोड़ी मिलाओ</h2>
+    <div class="memory-grid" id="memory-grid"></div>
+    <button class="big-btn btn-purple btn-small" id="mem-restart" style="margin-top:14px;">🔄 नया खेल</button>
+  </section>
+
+  <!-- ============ BUBBLE POP GAME SCREEN ============ -->
+  <section class="screen" id="screen-bubble">
+    <div class="topbar">
+      <button class="icon-btn" data-back="screen-modes">⬅️</button>
+      <div class="row">
+        <div class="stat-pill">⭐ <span id="bubble-score">0</span></div>
+        <div class="stat-pill">❤️ <span id="bubble-lives">3</span></div>
+      </div>
+      <button class="icon-btn" id="mute-btn6">🔊</button>
+    </div>
+    <h3 id="bubble-target-label">🫧 अक्षर <span id="bubble-target-letter">अ</span> वाला बुलबुला फोड़ो!</h3>
+    <div id="bubble-area"></div>
+    <button class="big-btn btn-blue btn-small" id="bubble-repeat">🔊 फिर सुनो</button>
+  </section>
+
+  <!-- ============ PROGRESS SCREEN ============ -->
+  <section class="screen" id="screen-progress">
+    <div class="topbar">
+      <button class="icon-btn" data-back="screen-home">⬅️</button>
+      <div class="stat-pill">⭐ <span id="prog-stars">0</span></div>
+      <button class="icon-btn" id="mute-btn7">🔊</button>
+    </div>
+    <h2>माता-पिता के लिए प्रगति</h2>
+    <p class="subtitle">Letters your child is still practicing appear with a shorter bar. Keep playing to fill them up!</p>
+    <div class="progress-table" id="progress-table"></div>
+    <button class="big-btn btn-orange btn-small" id="prog-reset" style="margin-top:14px;">🔄 सारी प्रगति रीसेट करें</button>
+  </section>
+
+  <div id="feedback-banner"></div>
+</div>
+
+<script>
+/* ============================================================
+   HINDI VARNAMALA ADVENTURE — GAME ENGINE
+   Single-file vanilla JS educational game.
+   ============================================================ */
+
+/* ---------- 1. LETTER DATA ---------- */
+const LETTERS = [
+  // Vowels (स्वर)
+  {char:'अ',translit:'a',word:'अनार',emoji:'🍎',type:'vowel'},
+  {char:'आ',translit:'aa',word:'आम',emoji:'🥭',type:'vowel'},
+  {char:'इ',translit:'i',word:'इमली',emoji:'🍬',type:'vowel'},
+  {char:'ई',translit:'ii',word:'ईख',emoji:'🎋',type:'vowel'},
+  {char:'उ',translit:'u',word:'उल्लू',emoji:'🦉',type:'vowel'},
+  {char:'ऊ',translit:'uu',word:'ऊन',emoji:'🧶',type:'vowel'},
+  {char:'ऋ',translit:'ri',word:'ऋषि',emoji:'🧙',type:'vowel'},
+  {char:'ए',translit:'e',word:'एक',emoji:'1️⃣',type:'vowel'},
+  {char:'ऐ',translit:'ai',word:'ऐनक',emoji:'👓',type:'vowel'},
+  {char:'ओ',translit:'o',word:'ओखली',emoji:'🥣',type:'vowel'},
+  {char:'औ',translit:'au',word:'औरत',emoji:'👩',type:'vowel'},
+  {char:'अं',translit:'am',word:'अंगूर',emoji:'🍇',type:'vowel'},
+  {char:'अः',translit:'ah',word:'अः',emoji:'🔤',type:'vowel'},
+  // Consonants (व्यंजन)
+  {char:'क',translit:'ka',word:'कमल',emoji:'🌸',type:'consonant'},
+  {char:'ख',translit:'kha',word:'खरगोश',emoji:'🐰',type:'consonant'},
+  {char:'ग',translit:'ga',word:'गमला',emoji:'🪴',type:'consonant'},
+  {char:'घ',translit:'gha',word:'घड़ी',emoji:'⏰',type:'consonant'},
+  {char:'ङ',translit:'nga',word:'ङ',emoji:'🔤',type:'consonant'},
+  {char:'च',translit:'cha',word:'चम्मच',emoji:'🥄',type:'consonant'},
+  {char:'छ',translit:'chha',word:'छाता',emoji:'☂️',type:'consonant'},
+  {char:'ज',translit:'ja',word:'जहाज़',emoji:'🚢',type:'consonant'},
+  {char:'झ',translit:'jha',word:'झंडा',emoji:'🚩',type:'consonant'},
+  {char:'ञ',translit:'nya',word:'ञ',emoji:'🔤',type:'consonant'},
+  {char:'ट',translit:'Ta',word:'टमाटर',emoji:'🍅',type:'consonant'},
+  {char:'ठ',translit:'Tha',word:'ठेला',emoji:'🛒',type:'consonant'},
+  {char:'ड',translit:'Da',word:'डमरू',emoji:'🥁',type:'consonant'},
+  {char:'ढ',translit:'Dha',word:'ढोल',emoji:'🪘',type:'consonant'},
+  {char:'ण',translit:'Na',word:'ण',emoji:'🔤',type:'consonant'},
+  {char:'त',translit:'ta',word:'तरबूज़',emoji:'🍉',type:'consonant'},
+  {char:'थ',translit:'tha',word:'थाली',emoji:'🍽️',type:'consonant'},
+  {char:'द',translit:'da',word:'दरवाज़ा',emoji:'🚪',type:'consonant'},
+  {char:'ध',translit:'dha',word:'धनुष',emoji:'🏹',type:'consonant'},
+  {char:'न',translit:'na',word:'नल',emoji:'🚰',type:'consonant'},
+  {char:'प',translit:'pa',word:'पतंग',emoji:'🪁',type:'consonant'},
+  {char:'फ',translit:'pha',word:'फल',emoji:'🍏',type:'consonant'},
+  {char:'ब',translit:'ba',word:'बकरी',emoji:'🐐',type:'consonant'},
+  {char:'भ',translit:'bha',word:'भालू',emoji:'🐻',type:'consonant'},
+  {char:'म',translit:'ma',word:'मछली',emoji:'🐟',type:'consonant'},
+  {char:'य',translit:'ya',word:'यज्ञ',emoji:'🔥',type:'consonant'},
+  {char:'र',translit:'ra',word:'रथ',emoji:'🛺',type:'consonant'},
+  {char:'ल',translit:'la',word:'लट्टू',emoji:'🪀',type:'consonant'},
+  {char:'व',translit:'va',word:'वन',emoji:'🌳',type:'consonant'},
+  {char:'श',translit:'sha',word:'शेर',emoji:'🦁',type:'consonant'},
+  {char:'ष',translit:'Sha',word:'षटकोण',emoji:'🔷',type:'consonant'},
+  {char:'स',translit:'sa',word:'सूरज',emoji:'☀️',type:'consonant'},
+  {char:'ह',translit:'ha',word:'हाथी',emoji:'🐘',type:'consonant'},
+  {char:'क्ष',translit:'ksha',word:'क्षमा',emoji:'🙏',type:'consonant'},
+  {char:'त्र',translit:'tra',word:'त्रिशूल',emoji:'🔱',type:'consonant'},
+  {char:'ज्ञ',translit:'gya',word:'ज्ञान',emoji:'📚',type:'consonant'},
+];
+
+// Visually / phonetically confusable letters, used to build tricky quiz options
+const CONFUSABLES = {
+  'ब':['भ','व'], 'भ':['ब','म'], 'घ':['ध','ङ'], 'ध':['घ','ढ'],
+  'च':['छ'], 'छ':['च'], 'ट':['ठ'], 'ठ':['ट','ड'],
+  'ड':['ढ','ड़'], 'ढ':['ड','ध'], 'प':['फ'], 'फ':['प'],
+  'क':['ख'], 'ख':['क'], 'त':['न'], 'न':['त'],
+  'उ':['ऊ'], 'ऊ':['उ'], 'इ':['ई'], 'ई':['इ'],
+  'ए':['ऐ'], 'ऐ':['ए'], 'ओ':['औ'], 'औ':['ओ'],
+  'श':['ष','स'], 'ष':['श','स'], 'स':['श','ष'],
+  'द':['ध'], 'ग':['घ']
+};
+
+const letterByChar = {};
+LETTERS.forEach(l => letterByChar[l.char] = l);
+
+/* ---------- 2. STATE / STORAGE ---------- */
+const STORAGE_KEY = 'hindiVarnamalaProgress_v1';
+
+function defaultState(){
+  const stats = {};
+  LETTERS.forEach(l => stats[l.char] = {correct:0, wrong:0, seen:false});
+  return {
+    stars: 0,
+    totalCorrect: 0,
+    totalAnswered: 0,
+    streak: 0,
+    bestStreak: 0,
+    muted: false,
+    letterStats: stats
+  };
+}
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    // merge in case new letters were added since last save
+    const base = defaultState();
+    base.stars = parsed.stars || 0;
+    base.totalCorrect = parsed.totalCorrect || 0;
+    base.totalAnswered = parsed.totalAnswered || 0;
+    base.bestStreak = parsed.bestStreak || 0;
+    base.muted = !!parsed.muted;
+    if(parsed.letterStats){
+      Object.keys(base.letterStats).forEach(k=>{
+        if(parsed.letterStats[k]) base.letterStats[k] = parsed.letterStats[k];
+      });
+    }
+    return base;
+  }catch(e){
+    return defaultState();
+  }
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function addStars(n){
+  state.stars += n;
+  saveState();
+  refreshStarDisplays();
+}
+
+function recordAnswer(letterChar, isCorrect){
+  const s = state.letterStats[letterChar];
+  if(!s) return;
+  s.seen = true;
+  if(isCorrect) s.correct++; else s.wrong++;
+  state.totalAnswered++;
+  if(isCorrect) state.totalCorrect++;
+  saveState();
+}
+
+function refreshStarDisplays(){
+  ['home-stars','modes-stars','learn-stars','quiz-stars','prog-stars'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = state.stars;
+  });
+}
+
+/* ---------- 3. AUDIO ENGINE ---------- */
+let audioCtx = null;
+function ensureAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type='sine', delay=0, gainVal=0.18){
+  if(state.muted) return;
+  try{
+    const ctx = ensureAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = gainVal;
+    osc.connect(gain); gain.connect(ctx.destination);
+    const startAt = ctx.currentTime + delay;
+    osc.start(startAt);
+    gain.gain.setValueAtTime(gainVal, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+    osc.stop(startAt + duration + 0.02);
+  }catch(e){/* audio not available */}
+}
+
+function sfxCorrect(){
+  playTone(523.25, 0.14, 'sine', 0);
+  playTone(659.25, 0.14, 'sine', 0.1);
+  playTone(783.99, 0.22, 'sine', 0.2);
+}
+function sfxWrong(){
+  playTone(220, 0.25, 'sawtooth', 0, 0.12);
+  playTone(180, 0.3, 'sawtooth', 0.12, 0.1);
+}
+function sfxCelebrate(){
+  const notes=[523.25,587.33,659.25,698.46,783.99,880];
+  notes.forEach((f,i)=>playTone(f,0.18,'triangle', i*0.11, 0.15));
+}
+function sfxPop(){
+  playTone(660,0.09,'square',0,0.12);
+}
+function sfxTick(){
+  playTone(880,0.05,'square',0,0.05);
+}
+
+// Speech synthesis for letter / word pronunciation
+let hindiVoice = null;
+function pickHindiVoice(){
+  const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  hindiVoice = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('hi')) || null;
+}
+if('speechSynthesis' in window){
+  pickHindiVoice();
+  window.speechSynthesis.onvoiceschanged = pickHindiVoice;
+}
+
+function speak(text, rate=0.85){
+  if(state.muted) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    if(hindiVoice){
+      // A real Hindi voice is installed - use it for correct pronunciation.
+      utter.voice = hindiVoice;
+      utter.lang = 'hi-IN';
+    } else {
+      // No Hindi voice on this device. Some browsers stay completely silent
+      // if lang is set to a locale with zero matching voices, so we leave
+      // lang unset and let the browser's default voice speak instead
+      // (pronunciation won't be perfect, but the child still hears something).
+    }
+    utter.rate = rate;
+    utter.pitch = 1.05;
+    window.speechSynthesis.speak(utter);
+    // Chrome/Android bug workaround: speech can silently stop after ~15s
+    // of the tab being idle. Nudging resume() keeps the engine alive.
+    setTimeout(()=>{ try{ window.speechSynthesis.resume(); }catch(e){} }, 250);
+  }catch(e){/* ignore */}
+}
+
+// Unlocks speech synthesis + audio on the very first real tap, which some
+// browsers (especially iOS Safari and some Android WebViews) require before
+// ANY sound - including sounds triggered later by timers - will play.
+let audioUnlocked = false;
+function unlockAudioOnce(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  ensureAudioCtx();
+  playTone(1, 0.01, 'sine', 0, 0.0001); // near-silent primer tone
+  if('speechSynthesis' in window){
+    try{
+      const primer = new SpeechSynthesisUtterance(' ');
+      primer.volume = 0.01;
+      window.speechSynthesis.speak(primer);
+    }catch(e){/* ignore */}
+  }
+}
+document.addEventListener('click', unlockAudioOnce, {once:true});
+document.addEventListener('touchstart', unlockAudioOnce, {once:true});
+
+// Keeps the speech engine from going to sleep during longer play sessions.
+setInterval(()=>{
+  if('speechSynthesis' in window){
+    try{ window.speechSynthesis.resume(); }catch(e){}
+  }
+}, 4000);
+
+function speakLetterAndWord(letterObj){
+  speak(letterObj.char + '. ' + letterObj.word);
+}
+
+/* ---------- 4. MUTE TOGGLE ---------- */
+function updateMuteButtons(){
+  const icon = state.muted ? '🔇' : '🔊';
+  ['mute-btn','mute-btn2','mute-btn3','mute-btn4','mute-btn5','mute-btn6','mute-btn7'].forEach(id=>{
+    const b = document.getElementById(id);
+    if(b) b.textContent = icon;
+  });
+}
+function toggleMute(){
+  state.muted = !state.muted;
+  saveState();
+  updateMuteButtons();
+  if(!state.muted) playTone(523,0.1,'sine',0,0.1);
+}
+['mute-btn','mute-btn2','mute-btn3','mute-btn4','mute-btn5','mute-btn6','mute-btn7'].forEach(id=>{
+  const b = document.getElementById(id);
+  if(b) b.addEventListener('click', toggleMute);
+});
+
+/* ---------- 5. SCREEN NAVIGATION ---------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  refreshStarDisplays();
+  if(id === 'screen-modes') {} // no-op, cards handle clicks
+}
+document.querySelectorAll('[data-back]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    stopBubbleGame();
+    showScreen(btn.getAttribute('data-back'));
+  });
+});
+document.getElementById('btn-play').addEventListener('click', ()=>{
+  ensureAudioCtx();
+  showScreen('screen-modes');
+});
+document.getElementById('btn-progress').addEventListener('click', ()=>{
+  renderProgressTable();
+  showScreen('screen-progress');
+});
+document.getElementById('btn-reset').addEventListener('click', confirmReset);
+document.getElementById('prog-reset').addEventListener('click', confirmReset);
+
+function confirmReset(){
+  if(confirm('क्या आप सारी प्रगति मिटाना चाहते हैं? (Reset all progress?)')){
+    state = defaultState();
+    saveState();
+    refreshStarDisplays();
+    renderProgressTable();
+    alert('प्रगति रीसेट हो गई! 🎉');
+  }
+}
+
+document.querySelectorAll('.mode-card').forEach(card=>{
+  card.addEventListener('click', ()=>{
+    const mode = card.getAttribute('data-mode');
+    ensureAudioCtx();
+    if(mode==='learn'){ initLearnMode(); showScreen('screen-learn'); }
+    if(mode==='quiz'){ initQuizMode(); showScreen('screen-quiz'); }
+    if(mode==='memory'){ initMemoryGame(); showScreen('screen-memory'); }
+    if(mode==='bubble'){ initBubbleGame(); showScreen('screen-bubble'); }
+  });
+});
+
+/* ---------- 6. FEEDBACK BANNER + CONFETTI ---------- */
+const fbBanner = document.getElementById('feedback-banner');
+const praiseWords = ['बहुत बढ़िया! 🌟','शाबाश! 👏','कमाल है! 🎉','आप हिंदी चैंपियन बन रहे हैं! 🏆','अद्भुत! ✨','सही जवाब! 💪'];
+const encourageWords = ['कोशिश करते रहो! 💫','कोई बात नहीं, फिर से कोशिश करो! 🙂','लगभग सही था! 👍'];
+
+function showFeedback(correct){
+  fbBanner.className = correct ? 'fb-correct' : 'fb-wrong';
+  fbBanner.textContent = correct
+    ? praiseWords[Math.floor(Math.random()*praiseWords.length)]
+    : encourageWords[Math.floor(Math.random()*encourageWords.length)];
+  fbBanner.classList.add('show');
+  setTimeout(()=>fbBanner.classList.remove('show'), 1100);
+}
+
+function launchConfetti(count=26){
+  const colors=['#ff6fa5','#8c5cf5','#4fc3f7','#ffd93d','#57d38c','#ff9457'];
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    const size = 6+Math.random()*8;
+    p.style.width = size+'px';
+    p.style.height = (size*1.6)+'px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.left = Math.random()*100+'vw';
+    p.style.transform = 'rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(p);
+    const duration = 1400+Math.random()*900;
+    const drift = (Math.random()-0.5)*160;
+    p.animate([
+      {transform:p.style.transform+' translateY(0)', opacity:1},
+      {transform:'translate('+drift+'px, 100vh) rotate('+(Math.random()*720)+'deg)', opacity:0.9}
+    ], {duration, easing:'ease-in'});
+    setTimeout(()=>p.remove(), duration+50);
+  }
+}
+
+/* ---------- 7. BACKGROUND DECORATIONS ---------- */
+function setupBackgroundDecor(){
+  const decor = document.getElementById('bg-decor');
+  const items = ['🎈','⭐','🎈','✨','🎈','⭐'];
+  for(let i=0;i<10;i++){
+    const el = document.createElement('div');
+    el.className='floaty';
+    el.textContent = items[i % items.length];
+    el.style.left = (Math.random()*94)+'vw';
+    el.style.fontSize = (1.4+Math.random()*2)+'rem';
+    el.style.animationDuration = (10+Math.random()*14)+'s';
+    el.style.animationDelay = (-Math.random()*20)+'s';
+    decor.appendChild(el);
+  }
+}
+setupBackgroundDecor();
+
+/* ---------- 8. HELPER: WEIGHTED RANDOM LETTER PICK (ADAPTIVE LEARNING) ---------- */
+function letterWeight(charKey){
+  const s = state.letterStats[charKey];
+  if(!s) return 1;
+  const attempts = s.correct + s.wrong;
+  if(attempts === 0) return 3; // prioritize unseen letters a bit
+  const accuracy = s.correct / attempts;
+  // lower accuracy => higher weight (more repetition of weak letters)
+  return Math.max(0.6, (1 - accuracy) * 4 + 0.6);
+}
+
+function weightedPick(pool){
+  const weights = pool.map(l => letterWeight(l.char));
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r -= weights[i];
+    if(r<=0) return pool[i];
+  }
+  return pool[pool.length-1];
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function getDistractors(correctLetter, pool, count, preferConfusable){
+  const opts = [];
+  if(preferConfusable && CONFUSABLES[correctLetter.char]){
+    CONFUSABLES[correctLetter.char].forEach(ch=>{
+      const found = pool.find(l=>l.char===ch);
+      if(found && opts.length<count && found.char !== correctLetter.char) opts.push(found);
+    });
+  }
+  const shuffledPool = shuffle(pool.filter(l=>l.char!==correctLetter.char && !opts.includes(l)));
+  for(const l of shuffledPool){
+    if(opts.length>=count) break;
+    opts.push(l);
+  }
+  return opts.slice(0,count);
+}
+
+/* ============================================================
+   LEARN MODE (FLASHCARDS)
+   ============================================================ */
+let learnPool = [];
+let learnIndex = 0;
+let learnType = 'vowel';
+
+document.querySelectorAll('#screen-learn .tab-btn').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#screen-learn .tab-btn').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    learnType = tab.getAttribute('data-type');
+    learnPool = LETTERS.filter(l=>l.type===learnType);
+    learnIndex = 0;
+    renderFlashcard();
+  });
+});
+
+function initLearnMode(){
+  learnType = 'vowel';
+  learnPool = LETTERS.filter(l=>l.type==='vowel');
+  learnIndex = 0;
+  renderFlashcard();
+}
+
+function renderFlashcard(){
+  const l = learnPool[learnIndex];
+  document.getElementById('fc-letter').textContent = l.char;
+  document.getElementById('fc-translit').textContent = l.translit;
+  document.getElementById('fc-emoji').textContent = l.emoji;
+  document.getElementById('fc-word').textContent = l.word;
+  speakLetterAndWord(l);
+  renderDots();
+}
+
+function renderDots(){
+  const wrap = document.getElementById('fc-dots');
+  wrap.innerHTML='';
+  learnPool.forEach((l,i)=>{
+    const d = document.createElement('div');
+    const s = state.letterStats[l.char];
+    d.className = 'dot' + (i===learnIndex ? ' current' : (s && s.seen ? ' learned' : ''));
+    wrap.appendChild(d);
+  });
+}
+
+document.getElementById('fc-speak').addEventListener('click', ()=>{
+  speakLetterAndWord(learnPool[learnIndex]);
+});
+document.getElementById('fc-next').addEventListener('click', ()=>{
+  learnIndex = (learnIndex+1) % learnPool.length;
+  renderFlashcard();
+});
+document.getElementById('fc-prev').addEventListener('click', ()=>{
+  learnIndex = (learnIndex-1+learnPool.length) % learnPool.length;
+  renderFlashcard();
+});
+document.getElementById('fc-know').addEventListener('click', ()=>{
+  const l = learnPool[learnIndex];
+  state.letterStats[l.char].seen = true;
+  if(state.letterStats[l.char].correct < 1) state.letterStats[l.char].correct = 1;
+  addStars(1);
+  sfxCorrect();
+  showFeedback(true);
+  saveState();
+  renderDots();
+  setTimeout(()=>{
+    learnIndex = (learnIndex+1) % learnPool.length;
+    renderFlashcard();
+  }, 500);
+});
+
+/* ============================================================
+   QUIZ MODE (ADAPTIVE, MULTIPLE QUESTION TYPES)
+   ============================================================ */
+let quizStreak = 0;
+let quizCurrentLetter = null;
+let quizTimerInterval = null;
+let quizAnswered = false;
+
+function getQuizLevel(){
+  if(state.totalCorrect < 8) return 1;
+  if(state.totalCorrect < 20) return 2;
+  if(state.totalCorrect < 40) return 3;
+  return 4;
+}
+const LEVEL_LABELS = {1:'शुरुआती (Beginner)', 2:'मध्यम (Intermediate)', 3:'उन्नत (Advanced)', 4:'चैंपियन (Champion)'};
+
+function currentQuizPool(){
+  const level = getQuizLevel();
+  if(level === 1) return LETTERS.filter(l=>l.type==='vowel');
+  if(level === 2) return LETTERS; // vowels + consonants
+  return LETTERS;
+}
+
+function initQuizMode(){
+  quizStreak = 0;
+  document.getElementById('quiz-streak').textContent = quizStreak;
+  document.getElementById('quiz-timer-wrap').classList.add('hidden');
+  nextQuizQuestion();
+}
+
+function nextQuizQuestion(){
+  clearInterval(quizTimerInterval);
+  quizAnswered = false;
+  const level = getQuizLevel();
+  document.getElementById('quiz-level-label').textContent = 'स्तर: ' + LEVEL_LABELS[level];
+  const pool = currentQuizPool();
+  quizCurrentLetter = weightedPick(pool);
+
+  // Choose question type based on level
+  let types = ['listen-choose', 'word-match'];
+  if(level>=3) types.push('missing-letter');
+  if(level>=4) types.push('similar-choice');
+  const qType = types[Math.floor(Math.random()*types.length)];
+
+  const display = document.getElementById('quiz-display');
+  const promptEl = document.getElementById('quiz-prompt');
+  const optionsWrap = document.getElementById('quiz-options');
+  optionsWrap.innerHTML='';
+  display.innerHTML='';
+
+  let correctChar = quizCurrentLetter.char;
+  let distractCount = 3;
+  let useConfusable = (qType === 'similar-choice');
+
+  if(qType === 'listen-choose'){
+    promptEl.textContent = 'सुनो और सही अक्षर चुनो 👂';
+    const speakBtn = document.createElement('button');
+    speakBtn.className='speak-btn'; speakBtn.textContent='🔊';
+    speakBtn.addEventListener('click', ()=>speak(quizCurrentLetter.char));
+    display.appendChild(speakBtn);
+    speak(quizCurrentLetter.char);
+    buildLetterOptions(correctChar, pool, distractCount, useConfusable);
+  }
+  else if(qType === 'word-match'){
+    promptEl.textContent = 'इस अक्षर से कौन सा शब्द बनता है?';
+    const big = document.createElement('div');
+    big.className='quiz-display-letter';
+    big.textContent = quizCurrentLetter.char;
+    display.appendChild(big);
+    const speakBtn2 = document.createElement('button');
+    speakBtn2.className='speak-btn'; speakBtn2.textContent='🔊';
+    speakBtn2.addEventListener('click', ()=>speak(quizCurrentLetter.char));
+    display.appendChild(speakBtn2);
+    speak(quizCurrentLetter.char);
+    buildWordOptions(quizCurrentLetter, pool, distractCount);
+  }
+  else if(qType === 'missing-letter'){
+    promptEl.textContent = 'लुप्त अक्षर ढूंढो (Find the missing letter)';
+    const idx = pool.findIndex(l=>l.char===quizCurrentLetter.char);
+    const seqPool = pool; // sequence within same type list order as authored
+    let center = idx;
+    if(center<=0) center = 1;
+    if(center>=seqPool.length-1) center = seqPool.length-2;
+    const before = seqPool[center-1];
+    const missing = seqPool[center];
+    const after = seqPool[center+1];
+    quizCurrentLetter = missing; // the answer is the missing one
+    const seqRow = document.createElement('div');
+    seqRow.style.fontSize='2.4rem'; seqRow.style.fontWeight='900'; seqRow.style.color='#3a2e5c';
+    seqRow.textContent = before.char + '   ❓   ' + after.char;
+    display.appendChild(seqRow);
+    const speakBtn3 = document.createElement('button');
+    speakBtn3.className='speak-btn'; speakBtn3.textContent='🔊';
+    speakBtn3.addEventListener('click', ()=>speak(before.char + ', ' + missing.char + ', ' + after.char));
+    display.appendChild(speakBtn3);
+    buildLetterOptions(missing.char, pool, distractCount, true);
+  }
+  else if(qType === 'similar-choice'){
+    promptEl.textContent = quizCurrentLetter.word + ' — सही अक्षर चुनो (ध्यान से देखो!)';
+    const emojiBig = document.createElement('div');
+    emojiBig.style.fontSize='3rem';
+    emojiBig.textContent = quizCurrentLetter.emoji;
+    display.appendChild(emojiBig);
+    const speakBtn4 = document.createElement('button');
+    speakBtn4.className='speak-btn'; speakBtn4.textContent='🔊';
+    speakBtn4.addEventListener('click', ()=>speak(quizCurrentLetter.word));
+    display.appendChild(speakBtn4);
+    speak(quizCurrentLetter.word);
+    buildLetterOptions(correctChar, pool, distractCount, true);
+    startQuizTimer(12);
+  }
+
+  if(qType !== 'similar-choice'){
+    document.getElementById('quiz-timer-wrap').classList.add('hidden');
+  }
+}
+
+function buildLetterOptions(correctChar, pool, distractCount, useConfusable){
+  const correctObj = letterByChar[correctChar];
+  const distractors = getDistractors(correctObj, pool, distractCount, useConfusable);
+  const options = shuffle([correctObj, ...distractors]);
+  const wrap = document.getElementById('quiz-options');
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className='opt-btn';
+    btn.textContent = opt.char;
+    btn.addEventListener('click', ()=>handleQuizAnswer(opt.char === correctChar, btn));
+    wrap.appendChild(btn);
+  });
+}
+
+function buildWordOptions(correctLetterObj, pool, distractCount){
+  const distractors = getDistractors(correctLetterObj, pool, distractCount, false);
+  const options = shuffle([correctLetterObj, ...distractors]);
+  const wrap = document.getElementById('quiz-options');
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML = opt.emoji + '<span class="opt-sub">' + opt.word + '</span>';
+    btn.addEventListener('click', ()=>handleQuizAnswer(opt.char === correctLetterObj.char, btn));
+    wrap.appendChild(btn);
+  });
+}
+
+function startQuizTimer(seconds){
+  const wrap = document.getElementById('quiz-timer-wrap');
+  const bar = document.getElementById('quiz-timer-bar');
+  wrap.classList.remove('hidden');
+  let timeLeft = seconds*10;
+  bar.style.width='100%';
+  clearInterval(quizTimerInterval);
+  quizTimerInterval = setInterval(()=>{
+    timeLeft--;
+    bar.style.width = Math.max(0,(timeLeft/(seconds*10))*100) + '%';
+    if(timeLeft<=0){
+      clearInterval(quizTimerInterval);
+      if(!quizAnswered) handleQuizAnswer(false, null, true);
+    }
+  }, 100);
+}
+
+function handleQuizAnswer(isCorrect, btnEl, timedOut){
+  if(quizAnswered) return;
+  quizAnswered = true;
+  clearInterval(quizTimerInterval);
+  recordAnswer(quizCurrentLetter.char, isCorrect);
+
+  document.querySelectorAll('#quiz-options .opt-btn').forEach(b=>b.disabled=true);
+  if(btnEl) btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+  if(!isCorrect){
+    // reveal correct one
+    document.querySelectorAll('#quiz-options .opt-btn').forEach(b=>{
+      if(b.textContent === quizCurrentLetter.char || b.textContent.startsWith(quizCurrentLetter.word)) b.classList.add('correct');
+    });
+  }
+
+  if(isCorrect){
+    quizStreak++;
+    if(quizStreak>state.bestStreak) state.bestStreak = quizStreak;
+    const bonus = quizStreak>0 && quizStreak%5===0 ? 3 : 1;
+    addStars(bonus);
+    sfxCorrect();
+    showFeedback(true);
+    if(quizStreak>0 && quizStreak%5===0){ launchConfetti(30); sfxCelebrate(); }
+  } else {
+    quizStreak = 0;
+    sfxWrong();
+    showFeedback(false);
+  }
+  document.getElementById('quiz-streak').textContent = quizStreak;
+  saveState();
+
+  setTimeout(nextQuizQuestion, 1300);
+}
+
+/* ============================================================
+   MEMORY MATCH GAME
+   ============================================================ */
+let memFirstPick = null;
+let memLock = false;
+let memMatchedCount = 0;
+let memPairCount = 6;
+
+function initMemoryGame(){
+  memMatchedCount = 0;
+  memFirstPick = null;
+  memLock = false;
+  document.getElementById('mem-pairs').textContent = 0;
+  document.getElementById('mem-total').textContent = memPairCount;
+
+  // Pick weak/unseen letters preferentially for extra practice value
+  const weighted = shuffle(LETTERS).sort((a,b)=>letterWeight(b.char)-letterWeight(a.char));
+  const chosen = shuffle(weighted.slice(0, Math.min(10, weighted.length))).slice(0, memPairCount);
+
+  const cards = [];
+  chosen.forEach(l=>{
+    cards.push({key:l.char, display:l.char, sub:'', big:true});
+    cards.push({key:l.char, display:l.emoji, sub:l.word, big:false});
+  });
+  const shuffled = shuffle(cards);
+
+  const grid = document.getElementById('memory-grid');
+  grid.innerHTML='';
+  shuffled.forEach((c,i)=>{
+    const card = document.createElement('div');
+    card.className='mem-card';
+    card.dataset.key = c.key;
+    card.innerHTML = `
+      <div class="mem-inner">
+        <div class="mem-face mem-back">❓</div>
+        <div class="mem-face mem-front" style="font-size:${c.big?'2.2rem':'1.7rem'}">
+          ${c.display}${c.sub? '<small>'+c.sub+'</small>' : ''}
+        </div>
+      </div>`;
+    card.addEventListener('click', ()=>onMemCardClick(card, c));
+    grid.appendChild(card);
+  });
+}
+
+function onMemCardClick(card, cardData){
+  if(memLock || card.classList.contains('matched') || card.classList.contains('flipped')) return;
+  card.classList.add('flipped');
+  speak(cardData.big ? cardData.display : (letterByChar[cardData.key] ? letterByChar[cardData.key].char : cardData.key));
+
+  if(!memFirstPick){
+    memFirstPick = {card, cardData};
+    return;
+  }
+  memLock = true;
+  const second = {card, cardData};
+  if(memFirstPick.cardData.key === second.cardData.key){
+    setTimeout(()=>{
+      memFirstPick.card.classList.add('matched');
+      second.card.classList.add('matched');
+      memMatchedCount++;
+      document.getElementById('mem-pairs').textContent = memMatchedCount;
+      addStars(2);
+      sfxCorrect();
+      recordAnswer(memFirstPick.cardData.key, true);
+      showFeedback(true);
+      memFirstPick = null;
+      memLock = false;
+      if(memMatchedCount === memPairCount){
+        launchConfetti(40);
+        sfxCelebrate();
+        setTimeout(()=>alert('शानदार! सारी जोड़ियाँ मिल गईं! 🎉'), 300);
+      }
+    }, 400);
+  } else {
+    sfxWrong();
+    recordAnswer(memFirstPick.cardData.key, false);
+    setTimeout(()=>{
+      memFirstPick.card.classList.remove('flipped');
+      second.card.classList.remove('flipped');
+      memFirstPick = null;
+      memLock = false;
+    }, 850);
+  }
+}
+document.getElementById('mem-restart').addEventListener('click', initMemoryGame);
+
+/* ============================================================
+   BUBBLE POP GAME
+   ============================================================ */
+let bubbleInterval = null;
+let bubbleTargetLetter = null;
+let bubbleScore = 0;
+let bubbleLives = 3;
+let bubblePool = [];
+let bubbleActive = false;
+const bubbleColors = ['#ff6fa5','#4fc3f7','#8c5cf5','#57d38c','#ff9457','#ffd93d'];
+
+function initBubbleGame(){
+  bubbleScore = 0;
+  bubbleLives = 3;
+  bubbleActive = true;
+  document.getElementById('bubble-score').textContent = bubbleScore;
+  document.getElementById('bubble-lives').textContent = bubbleLives;
+  document.getElementById('bubble-area').innerHTML='';
+  const level = getQuizLevel();
+  bubblePool = level<=1 ? LETTERS.filter(l=>l.type==='vowel') : LETTERS;
+  pickBubbleTarget();
+  clearInterval(bubbleInterval);
+  bubbleInterval = setInterval(spawnBubble, 1100);
+}
+
+function stopBubbleGame(){
+  bubbleActive = false;
+  clearInterval(bubbleInterval);
+}
+
+function pickBubbleTarget(){
+  bubbleTargetLetter = weightedPick(bubblePool);
+  document.getElementById('bubble-target-letter').textContent = bubbleTargetLetter.char;
+  speak(bubbleTargetLetter.char);
+}
+document.getElementById('bubble-repeat').addEventListener('click', ()=>{
+  if(bubbleTargetLetter) speak(bubbleTargetLetter.char);
+});
+
+function spawnBubble(){
+  if(!bubbleActive) return;
+  const area = document.getElementById('bubble-area');
+  if(!area.isConnected) return;
+
+  // decide if this bubble is the target letter (~40% chance) or a distractor
+  let letterObj;
+  if(Math.random() < 0.4){
+    letterObj = bubbleTargetLetter;
+  } else {
+    const distractors = getDistractors(bubbleTargetLetter, bubblePool, 6, true);
+    letterObj = distractors[Math.floor(Math.random()*distractors.length)] || weightedPick(bubblePool);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className='bubble';
+  bubble.textContent = letterObj.char;
+  const leftPct = 5 + Math.random()*80;
+  bubble.style.left = leftPct + '%';
+  bubble.style.background = 'radial-gradient(circle at 30% 30%, ' + bubbleColors[Math.floor(Math.random()*bubbleColors.length)] + ', rgba(255,255,255,.2))';
+  const duration = 4.2 + Math.random()*2.2;
+  bubble.style.animationDuration = duration+'s';
+
+  bubble.addEventListener('click', ()=>{
+    if(!bubbleActive) return;
+    const isTarget = letterObj.char === bubbleTargetLetter.char;
+    bubble.classList.add('pop');
+    sfxPop();
+    recordAnswer(bubbleTargetLetter.char, isTarget);
+    if(isTarget){
+      bubbleScore++;
+      document.getElementById('bubble-score').textContent = bubbleScore;
+      addStars(1);
+      showFeedback(true);
+      if(bubbleScore>0 && bubbleScore%8===0){
+        launchConfetti(24); sfxCelebrate();
+      }
+      setTimeout(()=>{ if(bubbleActive) pickBubbleTarget(); }, 400);
+    } else {
+      bubbleLives--;
+      document.getElementById('bubble-lives').textContent = bubbleLives;
+      sfxWrong();
+      showFeedback(false);
+      if(bubbleLives<=0){
+        endBubbleGame();
+      }
+    }
+    setTimeout(()=>bubble.remove(), 320);
+  });
+
+  area.appendChild(bubble);
+  setTimeout(()=>{ if(bubble.isConnected) bubble.remove(); }, duration*1000+80);
+}
+
+function endBubbleGame(){
+  stopBubbleGame();
+  setTimeout(()=>{
+    alert('खेल समाप्त! आपका स्कोर: ' + bubbleScore + ' ⭐\\nGame over! Your score: ' + bubbleScore);
+    showScreen('screen-modes');
+  }, 350);
+}
+
+/* ============================================================
+   PROGRESS / PARENT DASHBOARD
+   ============================================================ */
+function renderProgressTable(){
+  const wrap = document.getElementById('progress-table');
+  wrap.innerHTML='';
+  const sorted = LETTERS.slice().sort((a,b)=>{
+    const sa = state.letterStats[a.char], sb = state.letterStats[b.char];
+    const attA = sa.correct+sa.wrong, attB = sb.correct+sb.wrong;
+    const accA = attA? sa.correct/attA : -1;
+    const accB = attB? sb.correct/attB : -1;
+    return accA - accB;
+  });
+  sorted.forEach(l=>{
+    const s = state.letterStats[l.char];
+    const attempts = s.correct + s.wrong;
+    const acc = attempts ? Math.round((s.correct/attempts)*100) : 0;
+    const row = document.createElement('div');
+    row.className='progress-row';
+    const color = acc>=75 ? '#57d38c' : (acc>=40 ? '#ffd93d' : '#ff9457');
+    row.innerHTML = `
+      <div class="pl">${l.char}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${attempts? acc : 6}%; background:${color};"></div></div>
+      <div style="width:52px; text-align:right; font-size:.85rem; color:#888;">${attempts? acc+'%' : 'नया'}</div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------- INITIAL SETUP ---------- */
+updateMuteButtons();
+refreshStarDisplays();
+</script>
+</body>
+</html>
